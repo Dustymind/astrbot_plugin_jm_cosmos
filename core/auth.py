@@ -202,7 +202,7 @@ class JMAuthManager(JMClientMixin):
         if self.config.has_credentials():
             return await self.auto_login()
 
-        return False, "未登录，请使用 /jmlogin 登录"
+        return False, "未登录，请使用 #jmlogin 登录"
 
     def logout(self) -> tuple[bool, str]:
         """

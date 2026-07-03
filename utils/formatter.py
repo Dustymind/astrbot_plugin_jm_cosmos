@@ -50,7 +50,7 @@ class MessageFormatter:
             lines.append(f"📝 简介: {desc}")
 
         lines.append("━━━━━━━━━━━━━━━━━━━━━")
-        lines.append("💡 使用 /jm <ID> 下载此本子")
+        lines.append("💡 使用 #jm <ID> 下载此本子")
 
         return "\n".join(lines)
 
@@ -91,9 +91,9 @@ class MessageFormatter:
             lines.append("")
 
         lines.append("━━━━━━━━━━━━━━━━━━━━━")
-        lines.append("💡 使用 /jmi <ID> 查看详情")
-        lines.append("💡 使用 /jm <ID> 直接下载")
-        lines.append(f"💡 使用 /jms {keyword} {page + 1} 查看下一页")
+        lines.append("💡 使用 #jmi <ID> 查看详情")
+        lines.append("💡 使用 #jm <ID> 直接下载")
+        lines.append(f"💡 使用 #jms {keyword} {page + 1} 查看下一页")
         lines.append("💡 可加前缀指定类型: tag: / author: / actor:")
 
         return "\n".join(lines)
@@ -144,9 +144,9 @@ class MessageFormatter:
         cat_arg = "" if category == "all" else f" {category}"
         lines.append("")
         lines.append("━━━━━━━━━━━━━━━━━━━━━")
-        lines.append("💡 使用 /jmi <ID> 查看详情")
-        lines.append("💡 使用 /jm <ID> 直接下载")
-        lines.append(f"💡 使用 /jmrank {ranking_type}{cat_arg} {page + 1} 查看下一页")
+        lines.append("💡 使用 #jmi <ID> 查看详情")
+        lines.append("💡 使用 #jm <ID> 直接下载")
+        lines.append(f"💡 使用 #jmrank {ranking_type}{cat_arg} {page + 1} 查看下一页")
         lines.append("")
         lines.append("📊 类型: day(日榜) · week(周榜) · month(月榜)")
         lines.append("📂 可加分类: hanman·doujin·single·short·meiman·3d·cosplay")
@@ -210,9 +210,9 @@ class MessageFormatter:
 
         lines.append("")
         lines.append("━━━━━━━━━━━━━━━━━━━━━")
-        lines.append("💡 使用 /jmi <ID> 查看详情")
-        lines.append("💡 使用 /jm <ID> 直接下载")
-        lines.append(f"💡 使用 /jmrec ... {page + 1} 查看下一页")
+        lines.append("💡 使用 #jmi <ID> 查看详情")
+        lines.append("💡 使用 #jm <ID> 直接下载")
+        lines.append(f"💡 使用 #jmrec ... {page + 1} 查看下一页")
         lines.append("")
         lines.append("📂 分类: all·doujin·single·short·hanman·meiman·3d·cosplay")
         lines.append("📊 排序: hot(热门)·new(最新)·pic(图多)·like(点赞)")
@@ -231,7 +231,7 @@ class MessageFormatter:
         return """🎯 推荐浏览使用帮助
 
 【命令格式】
-/jmrec [分类] [排序] [时间] [页码]
+#jmrec [分类] [排序] [时间] [页码]
 
 【分类选项】
 all(全部) doujin(同人) single(单本)
@@ -245,11 +245,11 @@ hot(热门) new(最新) pic(图多) like(点赞)
 day(今日) week(本周) month(本月) all(全部)
 
 【使用示例】
-/jmrec                  → 本周全分类热门
-/jmrec hanman           → 本周韩漫热门
-/jmrec all hot day      → 今日全分类热门
-/jmrec doujin new week  → 本周同人最新
-/jmrec 3d hot month 2   → 本月3D热门第2页"""
+#jmrec                  → 本周全分类热门
+#jmrec hanman           → 本周韩漫热门
+#jmrec all hot day      → 今日全分类热门
+#jmrec doujin new week  → 本周同人最新
+#jmrec 3d hot month 2   → 本月3D热门第2页"""
 
     @staticmethod
     def format_favorites(albums: list[dict], folders: list[dict], page: int = 1) -> str:
@@ -288,10 +288,10 @@ day(今日) week(本周) month(本月) all(全部)
 
         lines.append("")
         lines.append("━━━━━━━━━━━━━━━━━━━━━")
-        lines.append("💡 使用 /jmfav <页码> 翻页")
-        lines.append("💡 使用 /jmfav <页码> <收藏夹ID> 查看特定收藏夹")
-        lines.append("💡 使用 /jmfav add <本子ID> 收藏本子")
-        lines.append("💡 使用 /jmfav del <本子ID> 取消收藏")
+        lines.append("💡 使用 #jmfav <页码> 翻页")
+        lines.append("💡 使用 #jmfav <页码> <收藏夹ID> 查看特定收藏夹")
+        lines.append("💡 使用 #jmfav add <本子ID> 收藏本子")
+        lines.append("💡 使用 #jmfav del <本子ID> 取消收藏")
 
         return "\n".join(lines)
 
@@ -319,8 +319,8 @@ day(今日) week(本周) month(本月) all(全部)
                 lines.append(f"   已记录章节: {sub.get('last_count', 0)}")
 
         lines.append("━━━━━━━━━━━━━━━━━━━━━")
-        lines.append("💡 /jmsub <ID> 订阅 · /jmunsub <ID> 取消订阅")
-        lines.append("💡 /jmupdate <ID> 下载新章节")
+        lines.append("💡 #jmsub <ID> 订阅 · #jmunsub <ID> 取消订阅")
+        lines.append("💡 #jmupdate <ID> 下载新章节")
 
         return "\n".join(lines)
 
@@ -418,33 +418,33 @@ day(今日) week(本周) month(本月) all(全部)
         return """📚 JM-Cosmos II - 漫画下载插件
 
 【基本命令】
-/jm <ID>     - 下载指定ID的本子
-/jmc <ID> <章节> - 下载指定本子的指定章节
-/jms <关键词> [页码] - 搜索漫画（支持 tag:/author:/actor: 前缀）
-/jmi <ID>    - 查看本子详情
-/jmrank      - 查看排行榜（可加分类，如 week hanman）
-/jmrec       - 推荐浏览（分类/排序/时间）
-/jmhelp      - 显示此帮助信息
+#jm <ID>     - 下载指定ID的本子
+#jmc <ID> <章节> - 下载指定本子的指定章节
+#jms <关键词> [页码] - 搜索漫画（支持 tag:/author:/actor: 前缀）
+#jmi <ID>    - 查看本子详情
+#jmrank      - 查看排行榜（可加分类，如 week hanman）
+#jmrec       - 推荐浏览（分类/排序/时间）
+#jmhelp      - 显示此帮助信息
 
 【账号命令】
-/jmlogin <用户名> <密码> - 登录JM账号
-/jmlogout   - 登出账号
-/jmstatus   - 查看登录状态
-/jmfav      - 查看我的收藏（add/del 收藏或取消，需登录）
+#jmlogin <用户名> <密码> - 登录JM账号
+#jmlogout   - 登出账号
+#jmstatus   - 查看登录状态
+#jmfav      - 查看我的收藏（add/del 收藏或取消，需登录）
 
 【订阅命令】
-/jmsub <ID>     - 订阅本子更新
-/jmunsub <ID>   - 取消订阅
-/jmsublist      - 查看订阅列表
-/jmupdate <ID>  - 下载新增章节
+#jmsub <ID>     - 订阅本子更新
+#jmunsub <ID>   - 取消订阅
+#jmsublist      - 查看订阅列表
+#jmupdate <ID>  - 下载新增章节
 
 【使用示例】
-/jm 123456       - 下载ID为123456的本子
-/jms 标签名 2    - 搜索包含该标签的漫画（第2页）
-/jmrank week     - 查看周排行榜
-/jmrec hanman    - 浏览韩漫热门
-/jmrec help      - 查看推荐功能详细帮助
-/jmfav 1         - 查看收藏夹第1页
+#jm 123456       - 下载ID为123456的本子
+#jms 标签名 2    - 搜索包含该标签的漫画（第2页）
+#jmrank week     - 查看周排行榜
+#jmrec hanman    - 浏览韩漫热门
+#jmrec help      - 查看推荐功能详细帮助
+#jmfav 1         - 查看收藏夹第1页
 
 【说明】
 • 下载的文件将自动打包发送

@@ -175,13 +175,13 @@ class TestFormatHelp:
         # 验证帮助文本的核心内容
         help_text = """📚 JM-Cosmos II - 漫画下载插件
 【基本命令】
-/jm <ID>     - 下载指定ID的本子
-/jms <关键词> - 搜索漫画
-/jmi <ID>    - 查看本子详情
+#jm <ID>     - 下载指定ID的本子
+#jms <关键词> - 搜索漫画
+#jmi <ID>    - 查看本子详情
 """
-        assert "/jm" in help_text
-        assert "/jms" in help_text
-        assert "/jmi" in help_text
+        assert "#jm" in help_text
+        assert "#jms" in help_text
+        assert "#jmi" in help_text
 
 
 class TestFormatError:
@@ -220,7 +220,7 @@ class TestFormatRecommendHelp:
         """测试推荐功能帮助信息"""
         help_text = """🎯 推荐浏览使用帮助
 【命令格式】
-/jmrec [分类] [排序] [时间] [页码]
+#jmrec [分类] [排序] [时间] [页码]
 """
         assert "jmrec" in help_text
         assert "分类" in help_text

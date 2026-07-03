@@ -205,8 +205,8 @@ class JMCosmosPlugin(Star):
         """
         下载指定ID的漫画本子
 
-        用法: /jm <ID>
-        示例: /jm 123456
+        用法: #jm <ID>
+        示例: #jm 123456
         """
         # 权限检查
         has_perm, error_msg = self._check_permission(event)
@@ -217,7 +217,7 @@ class JMCosmosPlugin(Star):
         # 参数检查
         if album_id is None:
             yield event.plain_result(
-                "❌ 请提供本子ID\n用法: /jm <ID>\n示例: /jm 123456"
+                "❌ 请提供本子ID\n用法: #jm <ID>\n示例: #jm 123456"
             )
             return
 
@@ -369,8 +369,8 @@ class JMCosmosPlugin(Star):
         """
         下载指定本子的指定章节
 
-        用法: /jmc <本子ID> <章节序号>
-        示例: /jmc 123456 3
+        用法: #jmc <本子ID> <章节序号>
+        示例: #jmc 123456 3
         """
         # 权限检查
         has_perm, error_msg = self._check_permission(event)
@@ -381,7 +381,7 @@ class JMCosmosPlugin(Star):
         # 参数检查
         if album_id is None or chapter_index is None:
             yield event.plain_result(
-                "❌ 请提供本子ID和章节序号\n用法: /jmc <本子ID> <章节序号>\n示例: /jmc 123456 3"
+                "❌ 请提供本子ID和章节序号\n用法: #jmc <本子ID> <章节序号>\n示例: #jmc 123456 3"
             )
             return
 
@@ -520,10 +520,10 @@ class JMCosmosPlugin(Star):
         """
         搜索漫画
 
-        用法: /jms <关键词> [页码]
+        用法: #jms <关键词> [页码]
         支持搜索类型前缀: tag: / author: / actor: / work:
-        示例: /jms 标签名
-        示例: /jms tag:全彩 2
+        示例: #jms 标签名
+        示例: #jms tag:全彩 2
         """
         # 权限检查
         has_perm, error_msg = self._check_permission(event)
@@ -533,9 +533,9 @@ class JMCosmosPlugin(Star):
 
         if keyword is None:
             yield event.plain_result(
-                "❌ 请提供搜索关键词\n用法: /jms <关键词> [页码]\n"
+                "❌ 请提供搜索关键词\n用法: #jms <关键词> [页码]\n"
                 "搜索类型: tag:标签 author:作者 actor:角色 work:作品\n"
-                "示例: /jms 标签名\n示例: /jms tag:全彩 2"
+                "示例: #jms 标签名\n示例: #jms tag:全彩 2"
             )
             return
 
@@ -595,8 +595,8 @@ class JMCosmosPlugin(Star):
         """
         查看本子详情
 
-        用法: /jmi <ID>
-        示例: /jmi 123456
+        用法: #jmi <ID>
+        示例: #jmi 123456
         """
         # 权限检查
         has_perm, error_msg = self._check_permission(event)
@@ -606,7 +606,7 @@ class JMCosmosPlugin(Star):
 
         if album_id is None:
             yield event.plain_result(
-                "❌ 请提供本子ID\n用法: /jmi <ID>\n示例: /jmi 123456"
+                "❌ 请提供本子ID\n用法: #jmi <ID>\n示例: #jmi 123456"
             )
             return
 
@@ -670,8 +670,8 @@ class JMCosmosPlugin(Star):
         """
         查看排行榜
 
-        用法: /jmrank [day/week/month] [分类] [页码]
-        示例: /jmrank week hanman 1
+        用法: #jmrank [day/week/month] [分类] [页码]
+        示例: #jmrank week hanman 1
         """
         # 权限检查
         has_perm, error_msg = self._check_permission(event)
@@ -701,8 +701,8 @@ class JMCosmosPlugin(Star):
             else:
                 yield event.plain_result(
                     f"❌ 无效参数: {arg}\n"
-                    "用法: /jmrank [day/week/month] [分类] [页码]\n"
-                    "示例: /jmrank week hanman 1"
+                    "用法: #jmrank [day/week/month] [分类] [页码]\n"
+                    "示例: #jmrank week hanman 1"
                 )
                 return
 
@@ -748,8 +748,8 @@ class JMCosmosPlugin(Star):
         """
         推荐浏览 - 按分类/排序/时间浏览漫画
 
-        用法: /jmrec [分类] [排序] [时间] [页码]
-        示例: /jmrec hanman hot week 1
+        用法: #jmrec [分类] [排序] [时间] [页码]
+        示例: #jmrec hanman hot week 1
         """
         # 权限检查
         has_perm, error_msg = self._check_permission(event)
@@ -836,7 +836,7 @@ class JMCosmosPlugin(Star):
 
             # 未知参数，显示帮助提示
             yield event.plain_result(
-                f"❌ 未知参数: {arg}\n💡 使用 /jmrec help 查看帮助"
+                f"❌ 未知参数: {arg}\n💡 使用 #jmrec help 查看帮助"
             )
             return
 
@@ -883,8 +883,8 @@ class JMCosmosPlugin(Star):
         """
         登录JM账号（仅限私聊）
 
-        用法: /jmlogin <用户名> <密码>
-        示例: /jmlogin myuser mypass
+        用法: #jmlogin <用户名> <密码>
+        示例: #jmlogin myuser mypass
         """
         # 权限检查
         has_perm, error_msg = self._check_permission(event)
@@ -896,7 +896,7 @@ class JMCosmosPlugin(Star):
         if event.get_group_id():
             yield event.plain_result(
                 "⚠️ 出于安全考虑，请勿在群聊中发送账号密码\n"
-                "请私聊机器人使用 /jmlogin <用户名> <密码>\n"
+                "请私聊机器人使用 #jmlogin <用户名> <密码>\n"
                 "💡 也可在管理面板配置账号密码实现自动登录\n"
                 "建议尽快撤回上面包含密码的消息"
             )
@@ -905,7 +905,7 @@ class JMCosmosPlugin(Star):
         # 参数检查
         if username is None or password is None:
             yield event.plain_result(
-                "❌ 请提供用户名和密码\n用法: /jmlogin <用户名> <密码>\n示例: /jmlogin myuser mypass"
+                "❌ 请提供用户名和密码\n用法: #jmlogin <用户名> <密码>\n示例: #jmlogin myuser mypass"
             )
             return
 
@@ -928,7 +928,7 @@ class JMCosmosPlugin(Star):
         """
         登出JM账号
 
-        用法: /jmlogout
+        用法: #jmlogout
         """
         # 权限检查
         has_perm, error_msg = self._check_permission(event)
@@ -948,7 +948,7 @@ class JMCosmosPlugin(Star):
         """
         查看登录状态
 
-        用法: /jmstatus
+        用法: #jmstatus
         """
         # 权限检查
         has_perm, error_msg = self._check_permission(event)
@@ -962,7 +962,7 @@ class JMCosmosPlugin(Star):
             yield event.plain_result(f"✅ 已登录\n👤 用户名: {status['username']}")
         else:
             yield event.plain_result(
-                "❌ 当前未登录\n💡 使用 /jmlogin <用户名> <密码> 登录"
+                "❌ 当前未登录\n💡 使用 #jmlogin <用户名> <密码> 登录"
             )
 
     @filter.command("jmfav")
@@ -973,12 +973,12 @@ class JMCosmosPlugin(Star):
         查看我的收藏 / 收藏 / 取消收藏本子
 
         用法:
-          /jmfav [页码] [收藏夹ID]   查看收藏
-          /jmfav add <本子ID>        收藏指定本子
-          /jmfav del <本子ID>        取消收藏指定本子
-        示例: /jmfav 1
-        示例: /jmfav add 123456
-        示例: /jmfav del 123456
+          #jmfav [页码] [收藏夹ID]   查看收藏
+          #jmfav add <本子ID>        收藏指定本子
+          #jmfav del <本子ID>        取消收藏指定本子
+        示例: #jmfav 1
+        示例: #jmfav add 123456
+        示例: #jmfav del 123456
         """
         # 权限检查
         has_perm, error_msg = self._check_permission(event)
@@ -989,7 +989,7 @@ class JMCosmosPlugin(Star):
         # 检查登录状态
         logged_in, login_msg = await self.auth_manager.ensure_logged_in()
         if not logged_in:
-            yield event.plain_result(f"❌ {login_msg}\n💡 请先使用 /jmlogin 登录")
+            yield event.plain_result(f"❌ {login_msg}\n💡 请先使用 #jmlogin 登录")
             return
 
         client = self.auth_manager.get_client()
@@ -1002,8 +1002,8 @@ class JMCosmosPlugin(Star):
             if not album_id.isdigit():
                 verb = "add" if is_add else "del"
                 yield event.plain_result(
-                    f"❌ 请提供有效的本子ID\n用法: /jmfav {verb} <本子ID>\n"
-                    f"示例: /jmfav {verb} 123456"
+                    f"❌ 请提供有效的本子ID\n用法: #jmfav {verb} <本子ID>\n"
+                    f"示例: #jmfav {verb} 123456"
                 )
                 return
 
@@ -1055,7 +1055,7 @@ class JMCosmosPlugin(Star):
         """
         订阅本子更新
 
-        用法: /jmsub <ID>
+        用法: #jmsub <ID>
         """
         has_perm, error_msg = self._check_permission(event)
         if not has_perm:
@@ -1063,7 +1063,7 @@ class JMCosmosPlugin(Star):
             return
 
         if album_id is None:
-            yield event.plain_result("❌ 请提供本子ID\n用法: /jmsub <ID>")
+            yield event.plain_result("❌ 请提供本子ID\n用法: #jmsub <ID>")
             return
 
         album_id = str(album_id).strip()
@@ -1108,7 +1108,7 @@ class JMCosmosPlugin(Star):
         """
         取消订阅
 
-        用法: /jmunsub <ID>
+        用法: #jmunsub <ID>
         """
         has_perm, error_msg = self._check_permission(event)
         if not has_perm:
@@ -1116,7 +1116,7 @@ class JMCosmosPlugin(Star):
             return
 
         if album_id is None:
-            yield event.plain_result("❌ 请提供本子ID\n用法: /jmunsub <ID>")
+            yield event.plain_result("❌ 请提供本子ID\n用法: #jmunsub <ID>")
             return
 
         album_id = str(album_id).strip()
@@ -1131,7 +1131,7 @@ class JMCosmosPlugin(Star):
         """
         查看本会话的订阅列表
 
-        用法: /jmsublist
+        用法: #jmsublist
         """
         has_perm, error_msg = self._check_permission(event)
         if not has_perm:
@@ -1146,7 +1146,7 @@ class JMCosmosPlugin(Star):
         """
         下载本子的新增章节（增量下载）
 
-        用法: /jmupdate <ID>
+        用法: #jmupdate <ID>
         """
         has_perm, error_msg = self._check_permission(event)
         if not has_perm:
@@ -1154,7 +1154,7 @@ class JMCosmosPlugin(Star):
             return
 
         if album_id is None:
-            yield event.plain_result("❌ 请提供本子ID\n用法: /jmupdate <ID>")
+            yield event.plain_result("❌ 请提供本子ID\n用法: #jmupdate <ID>")
             return
 
         album_id = str(album_id).strip()
@@ -1324,7 +1324,7 @@ class JMCosmosPlugin(Star):
             f"🔔 订阅更新\n"
             f"【{album_id}】{title}\n"
             f"章节: {last} → {current}\n"
-            f"💡 /jmupdate {album_id} 获取新章节，或 /jm {album_id} 下载全部"
+            f"💡 #jmupdate {album_id} 获取新章节，或 #jm {album_id} 下载全部"
         )
         try:
             await self.context.send_message(umo, MessageChain([Comp.Plain(text)]))

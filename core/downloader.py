@@ -38,7 +38,7 @@ def _get_progress_downloader_class(jmcomic):
           post_adapt_album 写死），且无法低成本获知全相册图片总数。旧实现把分母
           退化成“第一章图片数”，于是多章节本子进度很早冲到 ~76% 后冻结，而后台
           仍在下其余章节。
-        - 单章节相册 / 单章下载（/jmc）：按“图片”计。
+        - 单章节相册 / 单章下载（#jmc）：按“图片”计。
         """
 
         def __init__(self, option):
@@ -69,7 +69,7 @@ def _get_progress_downloader_class(jmcomic):
 
         def before_photo(self, photo):
             super().before_photo(photo)
-            # 单章场景（/jmc 无 album，或单章节相册）才按图片数计进度
+            # 单章场景（#jmc 无 album，或单章节相册）才按图片数计进度
             if self.total_photos <= 1 and not self.total_images:
                 try:
                     self.total_images = len(photo)
