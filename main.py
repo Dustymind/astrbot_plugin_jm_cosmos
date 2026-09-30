@@ -33,7 +33,7 @@ PLUGIN_NAME = "jm_cosmos2"
     "jm_cosmos2",
     "GEMILUXVII / Dustymind",
     "JM漫画下载插件 - 支持搜索、下载禁漫天堂的漫画本子，支持加密PDF/ZIP打包",
-    "2.8.0",
+    "2.8.1",
     "https://github.com/Dustymind/astrbot_plugin_jm_cosmos",
 )
 class JMCosmosPlugin(Star):
