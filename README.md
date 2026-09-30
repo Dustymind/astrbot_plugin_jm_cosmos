@@ -308,7 +308,9 @@ pip install -r requirements.txt
 | `max_concurrent_photos`  | 最大并发章节数             | `3`            | 建议 3-5 |
 | `max_concurrent_images`  | 最大并发图片数             | `5`            | 建议 5-10 |
 | `pack_format`            | 打包格式 (zip/pdf/long_img/none) | `zip`    | long_img 为纵向长图(过长分段打包 zip)；none 为不打包、仅本地保存不发送 |
-| `pack_password`          | 打包密码                   | 空             | **强烈建议设置，可降低风控** |
+| `pack_password_mode`     | 打包密码模式 (custom/album_id/timestamp) | `custom` | custom=自填写密码；album_id=本子ID；timestamp=时间戳(与文件名末尾一致) |
+| `pack_password`          | 自定义打包密码             | 空             | 仅 custom 模式生效；**强烈建议设置，可降低风控** |
+| `filename_append_timestamp` | 文件名末尾追加时间戳    | `false`        | 追加 -$timestamp；时间戳作密码时始终追加 |
 | `filename_show_password` | 文件名显示密码提示         | `false`        | 开启后文件名末尾添加 #PWxxx |
 | `auto_delete_after_send` | 发送后自动删除             | `true`         |  |
 | `send_cover_preview`     | 发送封面预览               | `true`         |  |
@@ -432,7 +434,7 @@ proxy_url: http://127.0.0.1:7890
 1. 尝试重启 NapCat：`docker restart napcat`
 2. 等待一段时间（几小时到几天）后风控可能自动解除
 3. 换用其他 QQ 账号
-4. **强烈建议**：开启 `pack_password` 加密功能，可有效降低触发风控的概率
+4. **强烈建议**：开启打包密码加密功能（设置 `pack_password`，或将 `pack_password_mode` 设为 `album_id`/`timestamp`，分别使用本子ID/时间戳作为密码），可有效降低触发风控的概率
 
 ## 更新日志
 

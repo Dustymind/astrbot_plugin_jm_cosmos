@@ -74,11 +74,34 @@
       "none"
     ]
   },
+  "pack_password_mode": {
+    "type": "string",
+    "description": "打包密码模式",
+    "hint": "custom: 使用下方自定义打包密码；album_id: 使用本子ID作为密码(每个本子密码不同，无需自填)；timestamp: 使用本次下载的时间戳作为密码(与文件名末尾时间戳一致)",
+    "default": "custom",
+    "options": [
+      "custom",
+      "album_id",
+      "timestamp"
+    ],
+    "labels": [
+      "自填写密码",
+      "使用本子ID作为密码",
+      "使用时间戳作为密码"
+    ]
+  },
   "pack_password": {
     "type": "string",
-    "description": "打包密码",
-    "hint": "为ZIP或PDF设置密码，留空则不加密",
-    "default": ""
+    "description": "自定义打包密码",
+    "hint": "仅在打包密码模式为 custom 时生效，为ZIP或PDF设置密码，留空则不加密",
+    "default": "",
+    "secret": true
+  },
+  "filename_append_timestamp": {
+    "type": "bool",
+    "description": "文件名末尾追加时间戳",
+    "hint": "开启后在文件名末尾追加 -$timestamp（Unix 秒级时间戳）；使用时间戳作为密码时始终追加，保证与密码一致",
+    "default": false
   },
   "filename_show_password": {
     "type": "bool",

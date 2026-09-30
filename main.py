@@ -5,6 +5,7 @@ JM-Cosmos II - AstrBot JM漫画下载插件
 """
 
 import asyncio
+import time
 from pathlib import Path
 
 import astrbot.api.message_components as Comp
@@ -193,6 +194,29 @@ class JMCosmosPlugin(Star):
         if reserved:
             self.quota_manager.refund(event.get_sender_id())
 
+    def _make_packer_and_filename(
+        self, album_id: str, chapter_idx: int | None = None
+    ) -> tuple[str, JMPacker]:
+        """
+        生成打包文件名与打包器。
+
+        时间戳只生成一次，同时用于文件名后缀与时间戳密码，确保两者一致。
+        """
+        timestamp = str(int(time.time()))
+        password = self.config_manager.resolve_pack_password(album_id, timestamp)
+        output_name = generate_album_filename(
+            album_id=album_id,
+            password=password,
+            chapter_idx=chapter_idx,
+            show_password=self.config_manager.filename_show_password,
+            timestamp=self.config_manager.resolve_filename_timestamp(timestamp),
+        )
+        packer = JMPacker(
+            pack_format=self.config_manager.pack_format,
+            password=password,
+        )
+        return output_name, packer
+
     @filter.command("jmhelp")
     async def help_command(self, event: AstrMessageEvent):
         """显示帮助信息"""
@@ -291,18 +315,8 @@ class JMCosmosPlugin(Star):
             # 下载成功，配额已在预留阶段计入（管理员不计）
             download_succeeded = True
 
-            # 生成文件名
-            output_name = generate_album_filename(
-                album_id=album_id,
-                password=self.config_manager.pack_password,
-                show_password=self.config_manager.filename_show_password,
-            )
-
-            # 打包文件
-            packer = JMPacker(
-                pack_format=self.config_manager.pack_format,
-                password=self.config_manager.pack_password,
-            )
+            # 生成文件名并构建打包器
+            output_name, packer = self._make_packer_and_filename(album_id)
 
             pack_result = packer.pack(
                 source_dir=result.save_path,
@@ -447,18 +461,9 @@ class JMCosmosPlugin(Star):
             # 下载成功，配额已在预留阶段计入（管理员不计）
             download_succeeded = True
 
-            # 生成文件名（带章节号）
-            output_name = generate_album_filename(
-                album_id=album_id,
-                password=self.config_manager.pack_password,
-                chapter_idx=chapter_idx,
-                show_password=self.config_manager.filename_show_password,
-            )
-
-            # 打包
-            packer = JMPacker(
-                pack_format=self.config_manager.pack_format,
-                password=self.config_manager.pack_password,
+            # 生成文件名（带章节号）并构建打包器
+            output_name, packer = self._make_packer_and_filename(
+                album_id, chapter_idx=chapter_idx
             )
 
             pack_result = packer.pack(
@@ -1206,15 +1211,7 @@ class JMCosmosPlugin(Star):
             # 下载成功，配额已在预留阶段计入（管理员不计）
             download_succeeded = True
 
-            output_name = generate_album_filename(
-                album_id=album_id,
-                password=self.config_manager.pack_password,
-                show_password=self.config_manager.filename_show_password,
-            )
-            packer = JMPacker(
-                pack_format=self.config_manager.pack_format,
-                password=self.config_manager.pack_password,
-            )
+            output_name, packer = self._make_packer_and_filename(album_id)
             pack_result = packer.pack(
                 source_dir=result.save_path, output_name=output_name
             )

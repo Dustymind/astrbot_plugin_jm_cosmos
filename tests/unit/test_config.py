@@ -46,6 +46,11 @@ class TestConfigManagerDefaults:
         assert config_manager.pack_format == "zip"
         assert config_manager.pack_password == ""
 
+    def test_pack_password_mode_default(self, config_manager):
+        """测试默认打包密码模式为自填写"""
+        assert config_manager.pack_password_mode == "custom"
+        assert config_manager.resolve_pack_password("123456") == ""
+
     def test_auto_delete_default(self, config_manager):
         """测试自动删除默认启用"""
         assert config_manager.auto_delete_after_send is True
@@ -150,6 +155,49 @@ class TestCustomConfig:
         manager = JMConfigManager(config, data_dir)
         assert manager.pack_format == "pdf"
         assert manager.pack_password == "secret123"
+
+    def test_pack_password_album_id_mode(self, data_dir):
+        """测试使用本子ID作为打包密码"""
+        from core.base import JMConfigManager
+
+        config = {"pack_password_mode": "album_id", "pack_password": "ignored"}
+        manager = JMConfigManager(config, data_dir)
+        assert manager.pack_password_mode == "album_id"
+        assert manager.resolve_pack_password("123456") == "123456"
+
+    def test_pack_password_timestamp_mode(self, data_dir):
+        """测试使用时间戳作为打包密码"""
+        from core.base import JMConfigManager
+
+        config = {"pack_password_mode": "timestamp", "pack_password": "ignored"}
+        manager = JMConfigManager(config, data_dir)
+        assert manager.pack_password_mode == "timestamp"
+        assert manager.resolve_pack_password("123456", "1700000000") == "1700000000"
+
+    def test_resolve_filename_timestamp(self, data_dir):
+        """测试文件名时间戳解析"""
+        from core.base import JMConfigManager
+
+        timestamp = "1700000000"
+        # 默认不追加时间戳
+        manager = JMConfigManager({}, data_dir)
+        assert manager.resolve_filename_timestamp(timestamp) == ""
+        # 开启配置后追加
+        manager = JMConfigManager({"filename_append_timestamp": True}, data_dir)
+        assert manager.resolve_filename_timestamp(timestamp) == timestamp
+        # 时间戳作密码时强制追加，保证与密码一致
+        manager = JMConfigManager({"pack_password_mode": "timestamp"}, data_dir)
+        assert manager.resolve_filename_timestamp(timestamp) == timestamp
+        assert manager.resolve_pack_password("123456", timestamp) == timestamp
+
+    def test_invalid_pack_password_mode_falls_back(self, data_dir):
+        """测试非法密码模式回退为自填写密码"""
+        from core.base import JMConfigManager
+
+        config = {"pack_password_mode": "unknown", "pack_password": "secret123"}
+        manager = JMConfigManager(config, data_dir)
+        assert manager.pack_password_mode == "custom"
+        assert manager.resolve_pack_password("123456") == "secret123"
 
     def test_proxy_configuration(self, data_dir):
         """测试代理配置"""

@@ -89,9 +89,34 @@ class JMConfigManager:
         return self.plugin_config.get("pack_format", "zip")
 
     @property
+    def pack_password_mode(self) -> str:
+        """打包密码模式: custom(自填写密码) / album_id(本子ID) / timestamp(时间戳)"""
+        mode = self.plugin_config.get("pack_password_mode", "custom")
+        return mode if mode in ("custom", "album_id", "timestamp") else "custom"
+
+    @property
     def pack_password(self) -> str:
-        """打包密码"""
+        """自定义打包密码（仅 custom 模式使用）"""
         return self.plugin_config.get("pack_password", "")
+
+    def resolve_pack_password(self, album_id: str, timestamp: str = "") -> str:
+        """按密码模式解析本次打包实际使用的密码"""
+        if self.pack_password_mode == "album_id":
+            return str(album_id)
+        if self.pack_password_mode == "timestamp":
+            return str(timestamp)
+        return self.pack_password
+
+    @property
+    def filename_append_timestamp(self) -> bool:
+        """是否在文件名末尾追加时间戳"""
+        return self.plugin_config.get("filename_append_timestamp", False)
+
+    def resolve_filename_timestamp(self, timestamp: str) -> str:
+        """返回需要追加到文件名末尾的时间戳；时间戳作密码时必须追加以保证一致"""
+        if self.pack_password_mode == "timestamp" or self.filename_append_timestamp:
+            return str(timestamp)
+        return ""
 
     @property
     def filename_show_password(self) -> bool:

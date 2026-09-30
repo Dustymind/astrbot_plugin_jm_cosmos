@@ -4,11 +4,13 @@
 
 import random
 
+
 def generate_album_filename(
     album_id: str,
     password: str = "",
     chapter_idx: int | None = None,
     show_password: bool = False,
+    timestamp: str = "",
 ) -> str:
     """
     生成下载文件名
@@ -18,6 +20,7 @@ def generate_album_filename(
         password: 打包密码
         chapter_idx: 章节序号 (仅章节下载时传入)
         show_password: 是否显示密码提示
+        timestamp: 追加到文件名末尾的时间戳，为空则不追加
 
     Returns:
         生成的文件名 (不含扩展名)
@@ -35,5 +38,9 @@ def generate_album_filename(
     # 可选：添加密码提示
     if show_password and password:
         name += f"#PW{password}"
+
+    # 可选：末尾追加时间戳
+    if timestamp:
+        name += f"-{timestamp}"
 
     return name
