@@ -2,6 +2,25 @@
 
 所有版本更新记录。
 
+## **v2.7.7** (2026-09-30)
+
+### 新增功能
+- **打包密码模式** - 新增 `pack_password_mode` 配置（WebUI 下拉选择）
+  - `custom`: 使用自填写密码（沿用原 `pack_password`）
+  - `album_id`: 使用本子ID作为密码，每个本子密码不同、无需自填
+  - `timestamp`: 使用本次下载的时间戳作为密码，与文件名末尾时间戳一致
+- **文件名时间戳** - 新增 `filename_append_timestamp` 配置，开启后在文件名末尾追加 `-$timestamp`（Unix 秒级）；时间戳作为密码时始终追加，保证收件人可获知密码
+
+### 改进
+- `pack_password` 配置项在 WebUI 中改为密码遮罩显示（`secret`），避免配置页明文暴露
+- `/jm`、`/jmc`、`/jmupdate` 三处下载流程统一生成打包器与文件名，时间戳只取一次，确保文件名后缀与打包密码一致
+
+### 文档
+- README 配置表补充 `pack_password_mode`、`filename_append_timestamp`
+- 更新版本号与更新时间
+
+---
+
 ## **v2.7.6** (2026-06-18)
 
 ### Bug 修复
