@@ -8,6 +8,8 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from astrbot.api import logger
+
 from ..jmcomic_loader import import_jmcomic
 
 if TYPE_CHECKING:
@@ -28,6 +30,33 @@ class JMConfigManager:
         self.plugin_config = plugin_config
         self.data_dir = data_dir
         self._option: JmOption | None = None
+
+        # 一次性迁移旧版逗号分隔字符串配置为 list（AstrBot 对 list 类型做严格校验）
+        self._migrate_legacy_list_configs()
+
+    def _migrate_legacy_list_configs(self) -> None:
+        """一次性迁移旧版逗号分隔字符串 → list（v2.8.1 起）。
+
+        AstrBot 对 list 类型配置做严格类型校验，旧版字符串值会触发
+        "期望 list 得到 str" 的校验失败。这里在插件初始化时把旧字符串值
+        一次性转为 list 并回写，之后全部按纯 list 处理，不保留运行时兼容。
+        """
+        migrated = False
+        for key in ("client_domain", "enabled_groups", "admin_list"):
+            val = self.plugin_config.get(key)
+            if isinstance(val, str):
+                self.plugin_config[key] = [x.strip() for x in val.split(",") if x.strip()]
+                migrated = True
+                logger.info(
+                    f"已迁移旧版配置 {key}: {val!r} -> {self.plugin_config[key]!r}"
+                )
+        if migrated:
+            save = getattr(self.plugin_config, "save_config", None)
+            if save is not None:
+                try:
+                    save()
+                except Exception as e:
+                    logger.warning(f"保存迁移后的配置失败: {e}")
 
     @property
     def download_dir(self) -> Path:
