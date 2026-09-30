@@ -27,10 +27,10 @@
     ]
   },
   "client_domain": {
-    "type": "string",
+    "type": "list",
     "description": "自定义域名列表",
-    "hint": "逗号分隔的 JM 域名，留空则由 jmcomic 自动选择；当默认域名被墙时可手动指定，如 18comic.vip,18comic.org",
-    "default": ""
+    "hint": "JM 域名列表，留空则由 jmcomic 自动选择；当默认域名被墙时可手动指定，如 18comic.vip、18comic.org",
+    "default": []
   },
   "retry_times": {
     "type": "int",
@@ -146,10 +146,10 @@
     "default": 60
   },
   "enabled_groups": {
-    "type": "string",
+    "type": "list",
     "description": "启用的群列表",
-    "hint": "以逗号分隔的群号列表，留空则所有群都启用",
-    "default": ""
+    "hint": "仅这些群可用；留空（空列表）则所有群都启用",
+    "default": []
   },
   "admin_only": {
     "type": "bool",
@@ -158,10 +158,10 @@
     "default": false
   },
   "admin_list": {
-    "type": "string",
+    "type": "list",
     "description": "管理员用户ID列表",
-    "hint": "以逗号分隔的用户ID列表，这些用户拥有管理员权限",
-    "default": ""
+    "hint": "这些用户拥有管理员权限，且不受每日下载配额限制；开启「仅管理员可用」后，仅这些用户能使用插件",
+    "default": []
   },
   "jm_username": {
     "type": "string",
@@ -184,7 +184,7 @@
   "daily_download_limit": {
     "type": "int",
     "description": "每日下载次数限制",
-    "hint": "每个用户每天最多下载次数，0 表示不限制。注意：配额数据库异常时会降级放行(fail-open)",
+    "hint": "每个用户每天最多下载次数，0 表示不限制；管理员名单中的用户不受此限制。注意：配额数据库异常时会降级放行(fail-open)",
     "default": 0
   },
   "subscribe_check_interval": {
@@ -192,6 +192,12 @@
     "description": "订阅检查间隔（秒）",
     "hint": "后台检查订阅本子更新的间隔秒数，建议>=1800，0 表示关闭后台检查(从0改为非0需重载插件生效)",
     "default": 3600
+  },
+  "subscribe_check_batch_size": {
+    "type": "int",
+    "description": "订阅检查每轮上限",
+    "hint": "每轮后台检查最多检查的订阅数量，超出部分留到下一轮，防止订阅量大时单轮耗时过长；建议 20-100，0 表示不限制（不推荐）",
+    "default": 50
   },
   "debug_mode": {
     "type": "bool",

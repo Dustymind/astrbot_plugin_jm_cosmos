@@ -31,10 +31,10 @@ PLUGIN_NAME = "jm_cosmos2"
 
 @register(
     "jm_cosmos2",
-    "GEMILUXVII",
+    "GEMILUXVII / Dustymind",
     "JM漫画下载插件 - 支持搜索、下载禁漫天堂的漫画本子，支持加密PDF/ZIP打包",
     "2.7.7",
-    "https://github.com/GEMILUXVII/astrbot_plugin_jm_cosmos",
+    "https://github.com/Dustymind/astrbot_plugin_jm_cosmos",
 )
 class JMCosmosPlugin(Star):
     """AstrBot JM漫画下载插件"""
@@ -79,6 +79,8 @@ class JMCosmosPlugin(Star):
         self.subscription_manager = SubscriptionManager(
             self.data_dir / "subscriptions.db"
         )
+        # 订阅后台检查的轮转偏移，保证订阅数超过每轮上限时也能逐轮覆盖全部订阅
+        self._sub_check_offset = 0
 
         # 调试模式
         self.debug_mode = self.config_manager.debug_mode
@@ -122,9 +124,20 @@ class JMCosmosPlugin(Star):
         except Exception as e:
             logger.debug(f"开启 jmcomic 调试转储失败（忽略）: {e}")
 
-    def _check_permission(self, event: AstrMessageEvent) -> tuple[bool, str]:
+    # jmcomic 未安装时的统一提示
+    _JMCOMIC_MISSING_MSG = (
+        "❌ jmcomic 库未安装，本插件核心功能无法使用\n"
+        "💡 请在插件目录执行 pip install -r requirements.txt，然后在 WebUI 重载插件"
+    )
+
+    def _check_permission(
+        self, event: AstrMessageEvent, require_jmcomic: bool = False
+    ) -> tuple[bool, str]:
         """
-        检查用户权限
+        检查用户权限（可选：检查 jmcomic 依赖是否安装）
+
+        Args:
+            require_jmcomic: 为 True 时，jmcomic 未安装会返回明确错误而非误导性空结果
 
         Returns:
             (是否有权限, 错误消息)
@@ -139,6 +152,11 @@ class JMCosmosPlugin(Star):
         # 检查群启用状态
         if group_id and not self.config_manager.is_group_enabled(group_id):
             return False, MessageFormatter.format_error("group_disabled")
+
+        # 检查 jmcomic 依赖：未安装时核心功能（搜索/详情/下载等）会静默返回空结果，
+        # 容易让用户误以为是"没搜到"，这里提前给出明确提示
+        if require_jmcomic and not JMBrowser.is_available():
+            return False, self._JMCOMIC_MISSING_MSG
 
         return True, ""
 
@@ -176,7 +194,7 @@ class JMCosmosPlugin(Star):
         """
         user_id = event.get_sender_id()
         limit = self.config_manager.daily_download_limit
-        is_admin = str(user_id) in self.config_manager.admin_list
+        is_admin = self.config_manager.is_admin_user(user_id)
         if limit <= 0 or is_admin:
             return True, "", False
 
@@ -217,6 +235,38 @@ class JMCosmosPlugin(Star):
         )
         return output_name, packer
 
+    async def _send_cover_or_info(self, event, album_id, detail):
+        """发送封面预览（封面+文字）或回退为纯文字详情，供下载与详情命令复用"""
+        cover_dir = self.config_manager.download_dir / "covers"
+        cover_path = await self.browser.get_album_cover(album_id, cover_dir)
+
+        if cover_path and cover_path.exists():
+            from astrbot.api.event import MessageChain
+
+            cover_chain = MessageChain(
+                [
+                    Comp.Image(file=str(cover_path)),
+                    Comp.Plain(MessageFormatter.format_album_info(detail)),
+                ]
+            )
+            if self.config_manager.cover_recall_enabled:
+                await send_with_recall(
+                    event, cover_chain, self.config_manager.auto_recall_delay
+                )
+            else:
+                yield event.chain_result(cover_chain.chain)
+        else:
+            yield event.plain_result(MessageFormatter.format_album_info(detail))
+
+    async def _pack_and_emit(self, event, result, album_id, chapter_idx=None):
+        """打包并发送下载结果（含自动撤回与清理），供所有下载类命令复用"""
+        output_name, packer = self._make_packer_and_filename(album_id, chapter_idx)
+        pack_result = packer.pack(
+            source_dir=result.save_path, output_name=output_name
+        )
+        async for msg in self._emit_packed_file(event, result, pack_result):
+            yield msg
+
     @filter.command("jmhelp")
     async def help_command(self, event: AstrMessageEvent):
         """显示帮助信息"""
@@ -233,7 +283,7 @@ class JMCosmosPlugin(Star):
         示例: #jm 123456
         """
         # 权限检查
-        has_perm, error_msg = self._check_permission(event)
+        has_perm, error_msg = self._check_permission(event, require_jmcomic=True)
         if not has_perm:
             yield event.plain_result(error_msg)
             return
@@ -262,7 +312,7 @@ class JMCosmosPlugin(Star):
             # 发送开始下载提示
             yield event.plain_result(f"⏳ 开始下载本子 {album_id}，请稍候...")
 
-            # 如果配置了发送封面预览，获取详情和封面（预览失败不应中断下载）
+            # 如果配置了发送封面预览，获取详情并发送（预览失败不应中断下载）
             if self.config_manager.send_cover_preview:
                 try:
                     detail = await self.browser.get_album_detail(album_id)
@@ -270,34 +320,8 @@ class JMCosmosPlugin(Star):
                     logger.debug(f"获取封面预览详情失败，跳过预览: {preview_err}")
                     detail = None
                 if detail:
-                    # 获取封面图片
-                    cover_dir = self.config_manager.download_dir / "covers"
-                    cover_path = await self.browser.get_album_cover(album_id, cover_dir)
-
-                    if cover_path and cover_path.exists():
-                        # 构建封面消息链
-                        from astrbot.api.event import MessageChain
-
-                        cover_chain = MessageChain(
-                            [
-                                Comp.Image(file=str(cover_path)),
-                                Comp.Plain(MessageFormatter.format_album_info(detail)),
-                            ]
-                        )
-
-                        # 根据配置决定是否对封面消息自动撤回
-                        if self.config_manager.cover_recall_enabled:
-                            await send_with_recall(
-                                event,
-                                cover_chain,
-                                self.config_manager.auto_recall_delay,
-                            )
-                        else:
-                            yield event.chain_result(cover_chain.chain)
-                    else:
-                        yield event.plain_result(
-                            MessageFormatter.format_album_info(detail)
-                        )
+                    async for msg in self._send_cover_or_info(event, album_id, detail):
+                        yield msg
 
             # 执行下载
             result = await self.download_manager.download_album(
@@ -315,54 +339,9 @@ class JMCosmosPlugin(Star):
             # 下载成功，配额已在预留阶段计入（管理员不计）
             download_succeeded = True
 
-            # 生成文件名并构建打包器
-            output_name, packer = self._make_packer_and_filename(album_id)
-
-            pack_result = packer.pack(
-                source_dir=result.save_path,
-                output_name=output_name,
-            )
-
-            result_msg = MessageFormatter.format_download_result(result, pack_result)
-
-            if (
-                pack_result.success
-                and pack_result.output_path
-                and pack_result.format != "none"
-            ):
-                # 构建文件路径 - 调试输出
-                file_path_str = str(pack_result.output_path)
-                logger.info(f"准备发送文件: {file_path_str}")
-
-                # 构建消息链
-                from astrbot.api.event import MessageChain
-
-                file_chain = MessageChain(
-                    [
-                        Comp.Plain(result_msg),
-                        Comp.File(
-                            name=pack_result.output_path.name,
-                            file=file_path_str,
-                        ),
-                    ]
-                )
-
-                # 根据配置决定是否使用自动撤回
-                if self.config_manager.auto_recall_enabled:
-                    await send_with_recall(
-                        event,
-                        file_chain,
-                        self.config_manager.auto_recall_delay,
-                    )
-                else:
-                    yield event.chain_result(file_chain.chain)
-
-                # 自动清理
-                if self.config_manager.auto_delete_after_send:
-                    JMPacker.cleanup(result.save_path)
-                    JMPacker.cleanup(pack_result.output_path)
-            else:
-                yield event.plain_result(result_msg)
+            # 打包并发送
+            async for msg in self._pack_and_emit(event, result, album_id):
+                yield msg
 
         except Exception as e:
             logger.error(f"下载本子失败: {e}")
@@ -387,7 +366,7 @@ class JMCosmosPlugin(Star):
         示例: #jmc 123456 3
         """
         # 权限检查
-        has_perm, error_msg = self._check_permission(event)
+        has_perm, error_msg = self._check_permission(event, require_jmcomic=True)
         if not has_perm:
             yield event.plain_result(error_msg)
             return
@@ -461,54 +440,9 @@ class JMCosmosPlugin(Star):
             # 下载成功，配额已在预留阶段计入（管理员不计）
             download_succeeded = True
 
-            # 生成文件名（带章节号）并构建打包器
-            output_name, packer = self._make_packer_and_filename(
-                album_id, chapter_idx=chapter_idx
-            )
-
-            pack_result = packer.pack(
-                source_dir=result.save_path,
-                output_name=output_name,
-            )
-
-            result_msg = MessageFormatter.format_download_result(result, pack_result)
-
-            if (
-                pack_result.success
-                and pack_result.output_path
-                and pack_result.format != "none"
-            ):
-                file_path_str = str(pack_result.output_path)
-                logger.info(f"准备发送章节文件: {file_path_str}")
-
-                # 构建消息链
-                from astrbot.api.event import MessageChain
-
-                file_chain = MessageChain(
-                    [
-                        Comp.Plain(result_msg),
-                        Comp.File(
-                            name=pack_result.output_path.name,
-                            file=file_path_str,
-                        ),
-                    ]
-                )
-
-                # 根据配置决定是否使用自动撤回
-                if self.config_manager.auto_recall_enabled:
-                    await send_with_recall(
-                        event,
-                        file_chain,
-                        self.config_manager.auto_recall_delay,
-                    )
-                else:
-                    yield event.chain_result(file_chain.chain)
-
-                if self.config_manager.auto_delete_after_send:
-                    JMPacker.cleanup(result.save_path)
-                    JMPacker.cleanup(pack_result.output_path)
-            else:
-                yield event.plain_result(result_msg)
+            # 打包并发送（带章节号）
+            async for msg in self._pack_and_emit(event, result, album_id, chapter_idx):
+                yield msg
 
         except Exception as e:
             logger.error(f"下载章节失败: {e}")
@@ -531,7 +465,7 @@ class JMCosmosPlugin(Star):
         示例: #jms tag:全彩 2
         """
         # 权限检查
-        has_perm, error_msg = self._check_permission(event)
+        has_perm, error_msg = self._check_permission(event, require_jmcomic=True)
         if not has_perm:
             yield event.plain_result(error_msg)
             return
@@ -604,7 +538,7 @@ class JMCosmosPlugin(Star):
         示例: #jmi 123456
         """
         # 权限检查
-        has_perm, error_msg = self._check_permission(event)
+        has_perm, error_msg = self._check_permission(event, require_jmcomic=True)
         if not has_perm:
             yield event.plain_result(error_msg)
             return
@@ -631,31 +565,8 @@ class JMCosmosPlugin(Star):
 
             # 根据配置决定是否发送封面图片
             if self.config_manager.send_cover_preview:
-                cover_dir = self.config_manager.download_dir / "covers"
-                cover_path = await self.browser.get_album_cover(album_id, cover_dir)
-
-                if cover_path and cover_path.exists():
-                    # 构建封面消息链
-                    from astrbot.api.event import MessageChain
-
-                    cover_chain = MessageChain(
-                        [
-                            Comp.Image(file=str(cover_path)),
-                            Comp.Plain(MessageFormatter.format_album_info(detail)),
-                        ]
-                    )
-
-                    # 根据配置决定是否对封面消息自动撤回
-                    if self.config_manager.cover_recall_enabled:
-                        await send_with_recall(
-                            event,
-                            cover_chain,
-                            self.config_manager.auto_recall_delay,
-                        )
-                    else:
-                        yield event.chain_result(cover_chain.chain)
-                else:
-                    yield event.plain_result(MessageFormatter.format_album_info(detail))
+                async for msg in self._send_cover_or_info(event, album_id, detail):
+                    yield msg
             else:
                 yield event.plain_result(MessageFormatter.format_album_info(detail))
 
@@ -679,12 +590,10 @@ class JMCosmosPlugin(Star):
         示例: #jmrank week hanman 1
         """
         # 权限检查
-        has_perm, error_msg = self._check_permission(event)
+        has_perm, error_msg = self._check_permission(event, require_jmcomic=True)
         if not has_perm:
             yield event.plain_result(error_msg)
             return
-
-        from .core.browser import JMBrowser
 
         categories = JMBrowser.get_category_list()
 
@@ -757,14 +666,12 @@ class JMCosmosPlugin(Star):
         示例: #jmrec hanman hot week 1
         """
         # 权限检查
-        has_perm, error_msg = self._check_permission(event)
+        has_perm, error_msg = self._check_permission(event, require_jmcomic=True)
         if not has_perm:
             yield event.plain_result(error_msg)
             return
 
         # 支持的参数值
-        from .core.browser import JMBrowser
-
         categories = JMBrowser.get_category_list()
         orders = JMBrowser.get_order_list()
         times = JMBrowser.get_time_list()
@@ -892,7 +799,7 @@ class JMCosmosPlugin(Star):
         示例: #jmlogin myuser mypass
         """
         # 权限检查
-        has_perm, error_msg = self._check_permission(event)
+        has_perm, error_msg = self._check_permission(event, require_jmcomic=True)
         if not has_perm:
             yield event.plain_result(error_msg)
             return
@@ -986,7 +893,7 @@ class JMCosmosPlugin(Star):
         示例: #jmfav del 123456
         """
         # 权限检查
-        has_perm, error_msg = self._check_permission(event)
+        has_perm, error_msg = self._check_permission(event, require_jmcomic=True)
         if not has_perm:
             yield event.plain_result(error_msg)
             return
@@ -1062,7 +969,7 @@ class JMCosmosPlugin(Star):
 
         用法: #jmsub <ID>
         """
-        has_perm, error_msg = self._check_permission(event)
+        has_perm, error_msg = self._check_permission(event, require_jmcomic=True)
         if not has_perm:
             yield event.plain_result(error_msg)
             return
@@ -1153,7 +1060,7 @@ class JMCosmosPlugin(Star):
 
         用法: #jmupdate <ID>
         """
-        has_perm, error_msg = self._check_permission(event)
+        has_perm, error_msg = self._check_permission(event, require_jmcomic=True)
         if not has_perm:
             yield event.plain_result(error_msg)
             return
@@ -1211,16 +1118,11 @@ class JMCosmosPlugin(Star):
             # 下载成功，配额已在预留阶段计入（管理员不计）
             download_succeeded = True
 
-            output_name, packer = self._make_packer_and_filename(album_id)
-            pack_result = packer.pack(
-                source_dir=result.save_path, output_name=output_name
-            )
-
             # 同步更新订阅记录的已知章节数
             if self.subscription_manager.exists(umo, album_id):
                 self.subscription_manager.update_count(umo, album_id, current)
 
-            async for msg in self._emit_packed_file(event, result, pack_result):
+            async for msg in self._pack_and_emit(event, result, album_id):
                 yield msg
 
         except Exception as e:
@@ -1291,6 +1193,18 @@ class JMCosmosPlugin(Star):
         subs = self.subscription_manager.list_all()
         if not subs:
             return
+
+        # 每轮最多检查 batch_size 条；用轮转偏移，保证订阅数超过 batch_size 时
+        # 也能逐轮覆盖到全部订阅，而不是永远只查前 batch_size 条
+        batch_size = self.config_manager.subscribe_check_batch_size
+        if batch_size > 0 and len(subs) > batch_size:
+            start = self._sub_check_offset % len(subs)
+            self._sub_check_offset += batch_size
+            picked = subs[start : start + batch_size]
+            # 切片越界时从头补足，保证每轮都检查满 batch_size 条
+            if len(picked) < batch_size:
+                picked += subs[: batch_size - len(picked)]
+            subs = picked
 
         for sub in subs:
             try:
