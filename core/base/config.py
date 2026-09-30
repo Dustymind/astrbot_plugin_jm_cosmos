@@ -52,10 +52,8 @@ class JMConfigManager:
 
     @property
     def client_domain(self) -> list[str]:
-        """自定义域名列表（AstrBot list 类型，兼容旧的逗号分隔字符串），留空则由 jmcomic 自动选择"""
+        """自定义域名列表"""
         raw = self.plugin_config.get("client_domain", [])
-        if isinstance(raw, str):
-            return [d.strip() for d in raw.split(",") if d.strip()]
         return [str(d).strip() for d in raw if str(d).strip()]
 
     @property
@@ -150,20 +148,14 @@ class JMConfigManager:
 
     @property
     def admin_list(self) -> set:
-        """管理员列表（AstrBot list 类型，兼容旧的逗号分隔字符串）"""
+        """管理员列表"""
         raw = self.plugin_config.get("admin_list", [])
-        if isinstance(raw, str):
-            return {a.strip() for a in raw.split(",") if a.strip()}
         return {str(a).strip() for a in raw if str(a).strip()}
 
     @property
     def enabled_groups(self) -> set:
-        """启用的群列表（AstrBot list 类型，兼容旧的逗号分隔字符串；空集合表示所有群都启用）"""
+        """启用的群列表（空集合表示所有群都启用）"""
         raw = self.plugin_config.get("enabled_groups", [])
-        if isinstance(raw, str):
-            if not raw:
-                return set()
-            return {g.strip() for g in raw.split(",") if g.strip()}
         return {str(g).strip() for g in raw if str(g).strip()}
 
     @property
