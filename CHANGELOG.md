@@ -2,6 +2,31 @@
 
 所有版本更新记录。
 
+## **v2.8.0** (2026-09-30)
+
+### 新增
+- **订阅检查每轮上限** - 新增 `subscribe_check_batch_size` 配置（默认 50，0 表示不限制），后台订阅检查按轮转逐轮覆盖，避免订阅量大时单轮耗时过长
+
+### Bug 修复
+- **长图单段密码静默丢失** - `long_img` 仅一段时若配置了打包密码，之前会静默产出未加密 PNG，现在明确报错
+- **订阅检查只查前 N 条** - 订阅数超过每轮上限时，之前永远只检查前 N 条，现在改为轮转、逐轮覆盖全部订阅
+- **jmcomic 未安装时误导报错** - 搜索/详情/排行/推荐/订阅等命令在 jmcomic 未安装时之前误报「未找到/暂无数据」，现在明确提示安装依赖
+- **章节列表判空** - `_get_photo_id_by_index_sync` 对 `episode_list` 判空，避免异常
+- **配额清理时区** - 清理过期配额改为本地时区，与计数口径一致
+
+### 改进 / 重构
+- 下载/封面流程去重：抽取 `_send_cover_or_info` 与 `_pack_and_emit`，`/jm`、`/jmc`、`/jmupdate`、`/jmi` 复用
+- jmcomic 可选依赖加载收敛为单一 `import_jmcomic()` 入口
+- 删除 `JMCOMIC_AVAILABLE`、`_current_progress` 等死代码
+
+### 配置规范化
+- `client_domain`、`enabled_groups`、`admin_list` 改为标准 `list` 类型（兼容旧逗号分隔字符串）
+
+### 文档
+- 插件 fork 双署名（GEMILUXVII / Dustymind）
+
+---
+
 ## **v2.7.7** (2026-09-30)
 
 ### 新增功能
