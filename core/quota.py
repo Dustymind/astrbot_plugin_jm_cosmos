@@ -6,7 +6,7 @@
 """
 
 import sqlite3
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from astrbot.api import logger
@@ -143,11 +143,14 @@ class DownloadQuotaManager:
         Args:
             days: 保留最近多少天的数据
         """
+        # 用本地日期计算截止日，与 _get_today() 的 date.today() 保持同一时区口径，
+        # 避免 SQL date('now') 的 UTC 与本地时区在凌晨边界产生偏差。
+        cutoff = (date.today() - timedelta(days=days)).isoformat()
         try:
             with self._get_connection() as conn:
                 conn.execute(
-                    "DELETE FROM download_quota WHERE date < date('now', ?)",
-                    (f"-{days} days",),
+                    "DELETE FROM download_quota WHERE date < ?",
+                    (cutoff,),
                 )
                 conn.commit()
                 logger.debug(f"已清理 {days} 天前的配额数据")

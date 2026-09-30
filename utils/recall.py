@@ -159,8 +159,8 @@ async def send_with_recall(
         from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
             AiocqhttpMessageEvent,
         )
-    except ImportError:
-        # 导入失败时回退到普通发送
+    except (ImportError, AttributeError):
+        # 导入失败（含 AstrBot 升级后内部路径/类名变化）时回退到普通发送
         await event.send(message_chain)
         return
 

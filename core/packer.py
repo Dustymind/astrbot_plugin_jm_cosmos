@@ -329,6 +329,19 @@ class JMPacker:
         try:
             # 单段：直接输出一张长图
             if len(strips) == 1:
+                # PNG 长图无法加密；已设置密码时明确失败，避免静默产出明文
+                if self.password:
+                    strips[0].close()
+                    return PackResult(
+                        success=False,
+                        output_path=None,
+                        format="long_img",
+                        encrypted=False,
+                        error_message=(
+                            "长图(PNG)不支持加密，无法应用打包密码；"
+                            "请清空打包密码或改用 zip/pdf"
+                        ),
+                    )
                 output_path = output_dir / f"{output_name}.png"
                 strips[0].save(output_path)
                 strips[0].close()
@@ -382,6 +395,8 @@ class JMPacker:
         for file_path in image_files:
             try:
                 with Image.open(file_path) as raw:
+                    if raw.width <= 0 or raw.height <= 0:
+                        continue  # 跳过尺寸异常的图片
                     scaled_height = max(
                         1, int(raw.height * _LONG_IMG_WIDTH / raw.width)
                     )
