@@ -65,7 +65,6 @@ class TestJMDownloadManagerInit:
 
         manager = JMDownloadManager(config_manager)
         assert manager.config is config_manager
-        assert manager._current_progress == {}
 
 
 class TestJMDownloadManagerAvailability:

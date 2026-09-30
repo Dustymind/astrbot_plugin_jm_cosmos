@@ -10,7 +10,7 @@ import asyncio
 from collections.abc import Callable
 from typing import TYPE_CHECKING, TypeVar
 
-from ..jmcomic_loader import can_import_jmcomic, is_jmcomic_available
+from ..jmcomic_loader import import_jmcomic
 from .config import JMConfigManager
 
 if TYPE_CHECKING:
@@ -18,8 +18,6 @@ if TYPE_CHECKING:
 
 # 泛型类型，用于标注返回值
 T = TypeVar("T")
-
-JMCOMIC_AVAILABLE = is_jmcomic_available()
 
 
 class JMClientMixin:
@@ -61,4 +59,4 @@ class JMClientMixin:
     @staticmethod
     def is_available() -> bool:
         """检查 jmcomic 库是否可用"""
-        return can_import_jmcomic()
+        return import_jmcomic() is not None

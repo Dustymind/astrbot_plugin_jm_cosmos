@@ -8,12 +8,10 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ..jmcomic_loader import import_jmcomic, is_jmcomic_available
+from ..jmcomic_loader import import_jmcomic
 
 if TYPE_CHECKING:
     from jmcomic import JmOption
-
-JMCOMIC_AVAILABLE = is_jmcomic_available()
 
 
 class JMConfigManager:
@@ -54,9 +52,11 @@ class JMConfigManager:
 
     @property
     def client_domain(self) -> list[str]:
-        """自定义域名列表（逗号分隔），留空则由 jmcomic 自动选择"""
-        domain_str = self.plugin_config.get("client_domain", "")
-        return [d.strip() for d in domain_str.split(",") if d.strip()]
+        """自定义域名列表（AstrBot list 类型，兼容旧的逗号分隔字符串），留空则由 jmcomic 自动选择"""
+        raw = self.plugin_config.get("client_domain", [])
+        if isinstance(raw, str):
+            return [d.strip() for d in raw.split(",") if d.strip()]
+        return [str(d).strip() for d in raw if str(d).strip()]
 
     @property
     def retry_times(self) -> int:
@@ -150,17 +150,21 @@ class JMConfigManager:
 
     @property
     def admin_list(self) -> set:
-        """管理员列表"""
-        admin_str = self.plugin_config.get("admin_list", "")
-        return {a.strip() for a in admin_str.split(",") if a.strip()}
+        """管理员列表（AstrBot list 类型，兼容旧的逗号分隔字符串）"""
+        raw = self.plugin_config.get("admin_list", [])
+        if isinstance(raw, str):
+            return {a.strip() for a in raw.split(",") if a.strip()}
+        return {str(a).strip() for a in raw if str(a).strip()}
 
     @property
     def enabled_groups(self) -> set:
-        """启用的群列表"""
-        groups_str = self.plugin_config.get("enabled_groups", "")
-        if not groups_str:
-            return set()  # 空集合表示所有群都启用
-        return {g.strip() for g in groups_str.split(",") if g.strip()}
+        """启用的群列表（AstrBot list 类型，兼容旧的逗号分隔字符串；空集合表示所有群都启用）"""
+        raw = self.plugin_config.get("enabled_groups", [])
+        if isinstance(raw, str):
+            if not raw:
+                return set()
+            return {g.strip() for g in raw.split(",") if g.strip()}
+        return {str(g).strip() for g in raw if str(g).strip()}
 
     @property
     def search_page_size(self) -> int:
@@ -203,6 +207,11 @@ class JMConfigManager:
         return self.plugin_config.get("subscribe_check_interval", 3600)
 
     @property
+    def subscribe_check_batch_size(self) -> int:
+        """订阅后台检查每轮最多检查的订阅数，0 表示不限制"""
+        return self.plugin_config.get("subscribe_check_batch_size", 50)
+
+    @property
     def cookies_file(self) -> Path:
         """Cookies文件路径"""
         return self.data_dir / "cookies.json"
@@ -215,6 +224,10 @@ class JMConfigManager:
         """检查用户是否是管理员"""
         if not self.admin_only:
             return True  # 如果没开启管理员限制，所有人都有权限
+        return str(user_id) in self.admin_list
+
+    def is_admin_user(self, user_id: str) -> bool:
+        """判断用户是否在管理员名单中（用于配额豁免等特权，与 admin_only 开关无关）"""
         return str(user_id) in self.admin_list
 
     def is_group_enabled(self, group_id: str) -> bool:

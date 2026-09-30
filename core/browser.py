@@ -17,9 +17,7 @@ from .constants import (
     get_order_list,
     get_time_list,
 )
-from .jmcomic_loader import import_jmcomic, is_jmcomic_available
-
-JMCOMIC_AVAILABLE = is_jmcomic_available()
+from .jmcomic_loader import import_jmcomic
 
 
 class JMBrowser(JMClientMixin):
@@ -176,14 +174,15 @@ class JMBrowser(JMClientMixin):
         parsed_id = jmcomic.JmcomicText.parse_to_jm_id(album_id)
         album = client.get_album_detail(parsed_id)
 
-        total_chapters = len(album.episode_list)
+        episode_list = getattr(album, "episode_list", None) or []
+        total_chapters = len(episode_list)
 
-        # 仅章节序号越界视为“章节不存在”，返回 None（用户输入从1开始）
-        if chapter_index < 1 or chapter_index > total_chapters:
+        # 章节列表为空或序号越界均视为“章节不存在”，返回 None（用户输入从1开始）
+        if not episode_list or chapter_index < 1 or chapter_index > total_chapters:
             return None
 
         # 获取章节信息: (photo_id, photo_index, photo_title)
-        photo_id, _, photo_title = album.episode_list[chapter_index - 1]
+        photo_id, _, photo_title = episode_list[chapter_index - 1]
 
         return (photo_id, photo_title, total_chapters)
 

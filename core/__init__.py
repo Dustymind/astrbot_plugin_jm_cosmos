@@ -9,13 +9,13 @@ from .base import JMClientMixin, JMConfigManager
 from .browser import JMBrowser
 from .downloader import DownloadResult, JMDownloadManager
 from .errors import classify_exception
-from .jmcomic_loader import is_jmcomic_available
+from .jmcomic_loader import import_jmcomic
 from .packer import JMPacker
 from .quota import DownloadQuotaManager
 from .subscribe import SubscriptionManager
 
 # 集中管理 jmcomic 库的可用性检查
-JMCOMIC_AVAILABLE = is_jmcomic_available()
+JMCOMIC_AVAILABLE = import_jmcomic() is not None
 
 __all__ = [
     "JMCOMIC_AVAILABLE",

@@ -14,12 +14,10 @@ from typing import TYPE_CHECKING, Any
 
 from .base import JMClientMixin, JMConfigManager
 from .errors import classify_exception
-from .jmcomic_loader import import_jmcomic, is_jmcomic_available
+from .jmcomic_loader import import_jmcomic
 
 if TYPE_CHECKING:
     from jmcomic import JmOption
-
-JMCOMIC_AVAILABLE = is_jmcomic_available()
 
 _PROGRESS_DOWNLOADER_CLASS = None
 
@@ -136,7 +134,6 @@ class JMDownloadManager(JMClientMixin):
             config_manager: 配置管理器实例
         """
         self.config = config_manager
-        self._current_progress = {}
 
     async def download_album(
         self,
